@@ -1,0 +1,20 @@
+diff --git a/libvpx.gyp b/libvpx.gyp
+index 8d84817..88731da 100644
+--- a/libvpx.gyp
++++ b/libvpx.gyp
+@@ -404,6 +404,7 @@
+                 '-s', '<(PRODUCT_DIR)/obj/libvpx_asm_offsets_vp8/vp8_asm_enc_offsets.obj',
+                 '-s', '<(ninja_obj_dir)/encoder/libvpx_asm_offsets_vp8.vp8_asm_enc_offsets.obj',
+                 '-s', '<(PRODUCT_DIR)/obj/Source/WebKit/chromium/third_party/libvpx/<(libvpx_source)/vp8/encoder/libvpx_asm_offsets_vp8.vp8_asm_enc_offsets.obj',
++                '-s', '<(PRODUCT_DIR)/obj/src/3rdparty_upstream/chromium/third_party/libvpx/<(libvpx_source)/vp8/encoder/libvpx_asm_offsets_vp8.vp8_asm_enc_offsets.obj',
+               ],
+               'process_output_as_sources': 1,
+               'msvs_cygwin_shell': 1,
+@@ -502,6 +503,7 @@
+                 '-s', '<(PRODUCT_DIR)/obj/libvpx_asm_offsets_vpx_scale/vpx_scale_asm_offsets.obj',
+                 '-s', '<(ninja_obj_dir)/encoder/libvpx_asm_offsets_vpx_scale.vpx_scale_asm_offsets.obj',
+                 '-s', '<(PRODUCT_DIR)/obj/Source/WebKit/chromium/third_party/libvpx/<(libvpx_source)/vpx_scale/libvpx_asm_offsets_vpx_scale.vpx_scale_asm_offsets.obj',
++                '-s', '<(PRODUCT_DIR)/obj/src/3rdparty_upstream/chromium/third_party/libvpx/<(libvpx_source)/vpx_scale/encoder/libvpx_asm_offsets_vpx_scale.vpx_scale_asm_offsets.obj',
+               ],
+               'process_output_as_sources': 1,
+               'msvs_cygwin_shell': 1,

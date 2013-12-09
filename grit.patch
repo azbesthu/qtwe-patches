@@ -1,0 +1,12 @@
+diff --git a/grit/node/misc.py b/grit/node/misc.py
+index 33848b2..95ae9da 100755
+--- a/grit/node/misc.py
++++ b/grit/node/misc.py
+@@ -431,6 +431,7 @@ class GritNode(base.Node):
+           # found as a key, fall back to using the absolute file name.
+           if not filename in first_ids:
+             filename = abs_filename
++            filename = filename.replace('\\', '/')
+         else:
+           filename = abs_filename[len(src_root_dir) + 1:]
+           filename = filename.replace('\\', '/')

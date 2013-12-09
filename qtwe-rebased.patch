@@ -1,0 +1,127 @@
+diff --git a/src/core/browser_context_qt.h b/src/core/browser_context_qt.h
+index 382b08f..dcd494b 100644
+--- a/src/core/browser_context_qt.h
++++ b/src/core/browser_context_qt.h
+@@ -77,7 +77,7 @@ public:
+         downloadManagerDelegate.reset(new DownloadManagerDelegateQt);
+     }
+ 
+-    virtual ~BrowserContextQt() Q_DECL_OVERRIDE
++    virtual ~BrowserContextQt()
+     {
+         if (resourceContext)
+             content::BrowserThread::DeleteSoon(content::BrowserThread::IO, FROM_HERE, resourceContext.release());
+diff --git a/src/core/chromium_gpu_helper.h b/src/core/chromium_gpu_helper.h
+index e0ac8e2..09ae5a7 100644
+--- a/src/core/chromium_gpu_helper.h
++++ b/src/core/chromium_gpu_helper.h
+@@ -55,7 +55,7 @@ class SyncPointManager;
+ namespace gpu {
+ namespace gles2 {
+ class MailboxManager;
+-class MailboxName;
++struct MailboxName;
+ class Texture;
+ }
+ }
+diff --git a/src/core/download_manager_delegate_qt.cpp b/src/core/download_manager_delegate_qt.cpp
+index 27b61b1..e00e4a2 100644
+--- a/src/core/download_manager_delegate_qt.cpp
++++ b/src/core/download_manager_delegate_qt.cpp
+@@ -119,7 +119,7 @@ bool DownloadTargetHelper::determineDownloadTarget(content::DownloadItem *item,
+ 
+     base::FilePath filePathForCallback(toFilePathString(suggestedFilePath));
+     callback.Run(filePathForCallback, content::DownloadItem::TARGET_DISPOSITION_OVERWRITE,
+-                 content::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT, filePathForCallback.AddExtension("download"));
++                 content::DOWNLOAD_DANGER_TYPE_MAYBE_DANGEROUS_CONTENT, filePathForCallback.AddExtension(toFilePathString("download")));
+     return true;
+ }
+ 
+diff --git a/src/core/process_main.cpp b/src/core/process_main.cpp
+index a8c1b3a..0790ef4 100644
+--- a/src/core/process_main.cpp
++++ b/src/core/process_main.cpp
+@@ -43,12 +43,23 @@
+ 
+ #include "content_main_delegate_qt.h"
+ #include "content/public/app/content_main.h"
++#if defined(OS_WIN)
++#include "sandbox/win/src/sandbox_types.h"
++#include "content/public/app/startup_helper_win.h"
++#endif
+ 
+ namespace QtWebEngine {
+ 
+ int processMain(int argc, const char **argv)
+ {
++#if defined(OS_WIN)
++    HINSTANCE instance_handle = NULL;
++    sandbox::SandboxInterfaceInfo sandbox_info = {0};
++    content::InitializeSandboxInfo(&sandbox_info);
++    return content::ContentMain(instance_handle, &sandbox_info, new ContentMainDelegateQt);
++#else
+     return content::ContentMain(argc, argv, new ContentMainDelegateQt);
++#endif // defined(OS_WIN)
+ }
+ 
+ }
+diff --git a/src/core/render_widget_host_view_qt.cpp b/src/core/render_widget_host_view_qt.cpp
+index 20c1dc4..69262e8 100644
+--- a/src/core/render_widget_host_view_qt.cpp
++++ b/src/core/render_widget_host_view_qt.cpp
+@@ -612,7 +612,11 @@ gfx::Rect RenderWidgetHostViewQt::GetBoundsInRootWindow()
+ gfx::GLSurfaceHandle RenderWidgetHostViewQt::GetCompositingSurface()
+ {
+     gfx::NativeViewId nativeViewId = GetNativeViewId();
++#if defined(OS_WIN)
++    return nativeViewId ? gfx::GLSurfaceHandle(reinterpret_cast<gfx::PluginWindowHandle>(nativeViewId), gfx::NATIVE_TRANSPORT) : gfx::GLSurfaceHandle();
++#else
+     return nativeViewId ? gfx::GLSurfaceHandle(nativeViewId, gfx::NATIVE_TRANSPORT) : gfx::GLSurfaceHandle();
++#endif
+ }
+ 
+ void RenderWidgetHostViewQt::SetHasHorizontalScrollbar(bool) { }
+diff --git a/src/core/render_widget_host_view_qt.h b/src/core/render_widget_host_view_qt.h
+index e7fab3f..02fc054 100644
+--- a/src/core/render_widget_host_view_qt.h
++++ b/src/core/render_widget_host_view_qt.h
+@@ -199,6 +199,11 @@ public:
+     virtual void HasTouchEventHandlers(bool) Q_DECL_OVERRIDE { QT_NOT_YET_IMPLEMENTED }
+ #endif // defined(OS_ANDROID)
+ 
++#if defined(OS_WIN)
++    virtual void SetClickthroughRegion(SkRegion *) Q_DECL_OVERRIDE { QT_NOT_YET_IMPLEMENTED }
++    virtual void WillWmDestroy(void) Q_DECL_OVERRIDE { QT_NOT_YET_IMPLEMENTED }
++#endif // defined(OS_WIN)
++
+ private:
+     void sendDelegatedFrameAck();
+     void Paint(const gfx::Rect& damage_rect);
+diff --git a/src/core/type_conversion.h b/src/core/type_conversion.h
+index 94e30d7..bf8cda3 100644
+--- a/src/core/type_conversion.h
++++ b/src/core/type_conversion.h
+@@ -55,7 +55,11 @@
+ 
+ inline QString toQt(const base::string16 &string)
+ {
++#if defined(OS_POSIX)
+     return QString::fromUtf16(string.data());
++#elif defined(OS_WIN)
++    return QString::fromStdWString(string.data());
++#endif
+ }
+ 
+ inline QString toQt(const std::string &string)
+@@ -65,7 +69,11 @@ inline QString toQt(const std::string &string)
+ 
+ inline base::string16 toString16(const QString &qString)
+ {
++#if defined(OS_POSIX)
+     return base::string16(qString.utf16());
++#elif defined(OS_WIN)
++    return base::string16(qString.toStdWString());
++#endif
+ }
+ 
+ inline QUrl toQt(const GURL &url)
